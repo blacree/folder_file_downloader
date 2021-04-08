@@ -15,7 +15,7 @@ target_boolean = False
 directory_path = []
 
 
-
+# How to use this script
 def usage():
     print("For client mode run:")
     print("[+] python script.py -t [ip-address] -p [port-number]")
@@ -32,6 +32,7 @@ def usage():
     print("[*]Note: If you want to repeat the dowload process for the same set of files deleting the downloaded copies increases the probability of succesfull file transfer.")
 
 
+# Start the client
 def start_client_instance(target, port):
     check_filename = b'$$file_name'
     #check_for_next = b'$$move_to_next' 
@@ -43,6 +44,7 @@ def start_client_instance(target, port):
 
     print("[*] Connecting to server...")
     try:
+        # Connect to server
         server.connect((target, port))
         print()
         print('[+] Connection to server successful...')
@@ -53,6 +55,7 @@ def start_client_instance(target, port):
         print("Exiting...")
         exit()
 
+    # Receive the files from the server
     while True:
         data = server.recv(4096)
 
@@ -87,7 +90,7 @@ def start_client_instance(target, port):
             opener.close()      
     
 
-
+    # Close the connection after receiving all files
     try:
         server.close()
         print()
@@ -96,7 +99,7 @@ def start_client_instance(target, port):
         print()
         print('[+]Download operation completed successfully.')
     
-
+    # Generate hash for each received file
     dowloaded_file_hash = {}
     for word in file_and_hash:
         File = open(word, 'rb')
@@ -107,6 +110,7 @@ def start_client_instance(target, port):
         hash_result = hashing.hexdigest()
         dowloaded_file_hash[word] = hash_result.encode()
     
+    # Compare the generated hash with the hash transmitted by the server, so as to check for errors
     for word in file_and_hash:
         print()
         print(word)
@@ -120,6 +124,8 @@ def start_client_instance(target, port):
     print('[+]Exiting...')
 
 
+
+# Start the server
 def start_server_instance(port, directory_content, no_client, dir_list):
     target = '0.0.0.0'
     main_content = ''
@@ -130,11 +136,14 @@ def start_server_instance(port, directory_content, no_client, dir_list):
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((target, port))
+    # Set the maximum number of clients to be connected to the server. Server does not start sending until all clients have connected
     server.listen(no_client)
 
+    # If the maximum client is one
     if no_client == 1:
         client_socket, addr = server.accept()
 
+        # Calculate the start time
         if client_socket:
             print()
             print('[+] Client ' + str(addr) + ' has connected...')
@@ -144,6 +153,7 @@ def start_server_instance(port, directory_content, no_client, dir_list):
             print("Start Time =", start_time)
             print()
 
+        # Send each file in the list one by one. Hash of the file also generated and sent to client.
         for fille in directory_content:
             time.sleep(0.4)
             hashing = hashlib.md5()
@@ -168,8 +178,11 @@ def start_server_instance(port, directory_content, no_client, dir_list):
         print("File transfer complete for client: " + str(addr))
         now = datetime.now()
         final_time = now.strftime("%H:%M:%S")
+        # Print the start and End time
         print("Start time: " + start_time)
         print("Time of completion", final_time)
+
+        # Close connection
         if client_socket:
             client_socket.close()
             print()
@@ -178,6 +191,7 @@ def start_server_instance(port, directory_content, no_client, dir_list):
             print()
             print("[*]Exiting...")
     else:
+        # If more than one client connects to server
         while True:
             client_socket, addr = server.accept()
             if client_socket:
@@ -193,6 +207,7 @@ def start_server_instance(port, directory_content, no_client, dir_list):
         start_time = now.strftime("%H:%M:%S")
         print("Start Time =", start_time)
         print()
+        # Send each file to every client.
         for fille in directory_content:
             address_counter = 0
             for client_socket in connected_devices:
@@ -216,6 +231,8 @@ def start_server_instance(port, directory_content, no_client, dir_list):
                 address_counter += 1
         address_counter = 0
         time.sleep(0.4)
+
+        # Close the connection between each client
         for client_socket in connected_devices:
             client_socket.send(sending_complete.encode())
             address = addresses_connected_devices[address_counter]
@@ -249,6 +266,7 @@ def main():
     directory_content = []
     speed = 1
 
+    # Check if the appropriate options are used
     if len(sys.argv[1:]):
         argumentlist = sys.argv[1:]
         if '-l' in argumentlist and '-t' in argumentlist:
@@ -272,7 +290,8 @@ def main():
         exit()
 
     
-
+    # Check if script would run as a client or as a server and collect the respective options passed to the script
+    # Make sure that the needed information is passed for server instance or client instance.
     if '-l' in argumentlist:
         server_boolean = True
     else:
@@ -296,8 +315,6 @@ def main():
             print('[-] Too many arguments provided for server instance\n')
             usage()
             exit()
-        # if '-f' not in argumentlist:
-        #     print('[-] Please provide a folder path for the download process')
     
     
     if target_boolean:
@@ -362,6 +379,8 @@ def main():
                     no_client = no_client
                     break
 
+        
+        # Collect all file names in the folder, including those in subfolders and store them in a list
         test_for_dir = []
         for dir_file in os.listdir(directory_path):
             file_path = directory_path + "\\" + dir_file
@@ -382,7 +401,6 @@ def main():
                         test_for_dir.append(file_path)                    
                     test_for_dir.remove(fille)
                     counter += 1
-                    #print(counter)
                 else:
                     if fille not in directory_content:
                         directory_content.append(fille)
@@ -396,7 +414,7 @@ def main():
 
 
 
-
+    # Start the server
     if server_boolean:
         print(directory_content)
         start_server_instance(port, directory_content, no_client, dir_list)
@@ -408,9 +426,10 @@ def main():
         # t = threading.Thread(target=start_server_instance, args=(port, directory_content))
         # t.start()
 
-
+    # Start the client and connect to server. Server has to be running before starting client
     if target_boolean:
         start_client_instance(target, port)
         
 
+# Start main function.
 main()
