@@ -392,34 +392,38 @@ def main():
 
         
         # Collect all file names in the folder, including those in subfolders and store them in a list
-        test_for_dir = []
-        for dir_file in os.listdir(directory_path):
-            file_path = directory_path + "/" + dir_file
-            test_for_dir.append(file_path)
-        
         dir_list = []
-        test_if_done = False
+        if os.path.isdir(directory_path):
+            test_for_dir = []
+            for dir_file in os.listdir(directory_path):
+                file_path = directory_path + "/" + dir_file
+                test_for_dir.append(file_path)
+            
+            test_if_done = False
 
-        while True:
-            if test_if_done == True:
-                break
-            counter = 0
-            for fille in test_for_dir:
-                if os.path.isdir(fille):
-                    dir_list.append(fille)
-                    for file_ in os.listdir(fille):
-                        file_path = fille + "/" + file_
-                        test_for_dir.append(file_path)                    
-                    test_for_dir.remove(fille)
-                    counter += 1
+            while True:
+                if test_if_done == True:
+                    break
+                counter = 0
+                for fille in test_for_dir:
+                    if os.path.isdir(fille):
+                        dir_list.append(fille)
+                        for file_ in os.listdir(fille):
+                            file_path = fille + "/" + file_
+                            test_for_dir.append(file_path)                    
+                        test_for_dir.remove(fille)
+                        counter += 1
+                        #print(counter)
+                    else:
+                        if fille not in directory_content:
+                            directory_content.append(fille)
+                if counter > 0:
+                    test_if_done = False
                 else:
-                    if fille not in directory_content:
-                        directory_content.append(fille)
-            if counter > 0:
-                test_if_done = False
-            else:
-                if counter == 0:
-                    test_if_done = True
+                    if counter == 0:
+                        test_if_done = True
+        else:
+            directory_content.append(directory_path)
         
         
 
