@@ -22,7 +22,7 @@ def usage():
     print('[*] Example: python script.py -t 127.0.0.1 -p 9999')
     print("\nFor server mode run:")
     print("[+] python script.py -l -p [port-number] -f [folder-path] -s [speed(no)] -c [clients[no]]")
-    print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -s [no] -c 5')
+    print('[*] Example: python script.py -l -p 9999 -f /root/Documents -s [no] -c 5')
     print("Note: If no port is provided for the server the default port used is 9999")
     print("Note: If no speed value is provided for the server the default speed used is 1")
     print("Note: If no value is provided for no of clients for the server the default value is 1")
@@ -163,7 +163,7 @@ def start_server_instance(port, directory_content, no_client, dir_list):
             main_file = open(fille, 'rb')
             main_content = main_file.read()
             main_file.close()
-            name_of_file = fille.split("\\")[-1]
+            name_of_file = fille.split("/")[-1]
             filename = name_of_file + '.$$file_name'
             time.sleep(0.3)
             client_socket.send(filename.encode())
@@ -223,7 +223,7 @@ def start_server_instance(port, directory_content, no_client, dir_list):
                 main_file = open(fille, 'rb')
                 main_content = main_file.read()
                 main_file.close()
-                name_of_file = fille.split("\\")[-1]
+                name_of_file = fille.split("/")[-1]
                 filename = name_of_file + '.$$file_name'
                 time.sleep(0.3)
                 client_socket.send(filename.encode())
@@ -394,7 +394,7 @@ def main():
         # Collect all file names in the folder, including those in subfolders and store them in a list
         test_for_dir = []
         for dir_file in os.listdir(directory_path):
-            file_path = directory_path + "\\" + dir_file
+            file_path = directory_path + "/" + dir_file
             test_for_dir.append(file_path)
         
         dir_list = []
@@ -408,7 +408,7 @@ def main():
                 if os.path.isdir(fille):
                     dir_list.append(fille)
                     for file_ in os.listdir(fille):
-                        file_path = fille + "\\" + file_
+                        file_path = fille + "/" + file_
                         test_for_dir.append(file_path)                    
                     test_for_dir.remove(fille)
                     counter += 1
