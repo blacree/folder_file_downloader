@@ -1,6 +1,6 @@
 # upload_to_client
-Download all the files in a folder including those contained in sub-folders
-This script can also be used to send a single file to a client or clients.
+Download all the files in a folder including those contained in sub-folders over a network
+This script is used to send a single file or multiple files to a client or clients.
 
 This is a custom python script that helps to download the files contained in a folder and it's subfolders.
 This is very useful when you have terminal access to a target computer and do not want to download the contents of a folder one by one.
