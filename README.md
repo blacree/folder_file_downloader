@@ -3,7 +3,7 @@ Download all the files in a folder including those contained in sub-folders over
 This script is used to send a single file or multiple files to a client or clients.
 
 This is a custom python script that helps to download the files contained in a folder and it's subfolders.
-This is very useful when you have terminal access to a target computer and do not want to download the contents of a folder one by one.
+This is very useful when you have Network access to your target machine and do not want to download the contents of a folder one by one.
 
 The script is run as a server on the computer which contains the files and run as client on the computer which wants to receive the files.
 More than one computer can connect to the server as a client to receive the files to be downloaded. 
