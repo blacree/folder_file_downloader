@@ -390,14 +390,20 @@ def main():
                 except:
                     no_client = no_client
                     break
-
+        
+        # Check if computer is windows or linux
+        try:
+            output = subprocess.check_output('ver', stderr=subprocess.STDOUT, shell=True)
+            directory_delimiter = '\\'
+        except:
+            directory_delimiter = '/'
         
         # Collect all file names in the folder, including those in subfolders and store them in a list
         dir_list = []
         if os.path.isdir(directory_path):
             test_for_dir = []
             for dir_file in os.listdir(directory_path):
-                file_path = directory_path + "\\" + dir_file
+                file_path = directory_path + directory_delimiter + dir_file
                 test_for_dir.append(file_path)
             
             test_if_done = False
@@ -410,7 +416,7 @@ def main():
                     if os.path.isdir(fille):
                         dir_list.append(fille)
                         for file_ in os.listdir(fille):
-                            file_path = fille + "\\" + file_
+                            file_path = fille + directory_delimiter + file_
                             test_for_dir.append(file_path)                    
                         test_for_dir.remove(fille)
                         counter += 1
