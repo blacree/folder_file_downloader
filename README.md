@@ -1,4 +1,4 @@
-# upload_to_client
+# folder_file_downloader
 Download all the files in a folder including those contained in sub-folders
 This script can also be used to send a single file or files to a client or clients over a network (Internet).
 
