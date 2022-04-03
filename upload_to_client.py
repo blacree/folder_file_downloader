@@ -1,18 +1,20 @@
 import sys
 import subprocess
-import optparse
+# import optparse
 import socket
-import threading
+# import threading
 import os
 import time
 #import multiprocessing
 import hashlib
 #import concurrent.futures as threadzz
 from datetime import datetime
+import codecs
 
 server_boolean = False
 target_boolean = False
 directory_path = []
+path_delimiter = '\\'
 
 
 # How to use this script
@@ -21,16 +23,16 @@ def usage():
     print("[+] python script.py -t [ip-address] -p [port-number]")
     print('[*] Example: python script.py -t 127.0.0.1 -p 9999')
     print("\nFor server mode run:")
-    print("[+] python script.py -l -p [port-number] -f [folder-path/file_path] -s [speed(no)] -c [clients[no]]")
-    print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -s [no] -c 5')
+    print("[+] python script.py -l -p [port-number] -f [folder-path/file_path] -c [clients[no]]")
+    # print("[+] python script.py -l -p [port-number] -f [folder-path/file_path] -s [speed(no)] -c [clients[no]]")
+    # print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -s [no] -c 5')
+    print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -c 5')
     print("Note: If no port is provided for the server the default port used is 9999")
-    print("Note: If no speed value is provided for the server the default speed used is 1")
+    # print("Note: If no speed value is provided for the server the default speed used is 1")
     print("Note: If no value is provided for no of clients for the server the default value is 1")
-    print("Note: Please do not provide more than one forward slash for each one in the path provided")
     print("Note: The '-f' option can receive file or folder path. File path when sending a single file and folder_path when sending contents of a folder")
     print("\n[*] Options -t and -p are compulsory for creating the client instance")
     print("[*] Options -l and -f are compulsory for creating the server instance")
-    print("[*]Note: If you want to repeat the dowload process for the same set of files deleting the downloaded copies increases the probability of succesfull file transfer.")
 
 
 # Start the client
@@ -64,6 +66,7 @@ def start_client_instance(target, port):
         if sending_complete in data:
             break
 
+        # Get actual file name
         if check_filename in data:
             filename = b''
             received_file = data.split(b'.')
@@ -76,17 +79,17 @@ def start_client_instance(target, port):
                     break
                 filename = filename + b'.' + value 
             print()
-            print(b'[*] Creating file: ' + filename)
-            print('[*]Receiving content...')
+            print('[*] Creating file: ' + codecs.decode(filename, "unicode_escape"))
+            print('[*] Receiving content...')
             opener = open(filename, 'wb')
             continue
         if hash_identifier in data:
             main_hash = data.split(b'.')[0]
-            print('Received hash for file: ' + str(main_hash))
+            print('[*] Received hash for file: ' + str(main_hash))
             file_and_hash[filename] = main_hash
             continue
         if file_sent_complete in data:
-            print(b'[+]'+ filename + b' received successfully.')
+            print('[+] '+ codecs.decode(filename, "unicode_escape") + ' received successfully.')
             opener.close()
         try:
             opener.write(data)
@@ -98,10 +101,10 @@ def start_client_instance(target, port):
     try:
         server.close()
         print()
-        print('[+]Download operation completed successfully.')
+        print('[+] Download operation completed successfully.')
     except:
         print()
-        print('[+]Download operation completed successfully.')
+        print('[+] Download operation completed successfully.')
     
     # Generate hash for each received file
     dowloaded_file_hash = {}
@@ -115,22 +118,32 @@ def start_client_instance(target, port):
         dowloaded_file_hash[word] = hash_result.encode()
     
     # Compare the generated hash with the hash transmitted by the server, so as to check for errors
+    total_no_files = len(file_and_hash)
+    no_of_verified_files = 0
+    print("[*] Verifying File Integrity...\n")
     for word in file_and_hash:
-        print()
-        print(word)
+        print()        
+        print('[*] File: ' + codecs.decode(word, "unicode_escape"))
         print('Received hash: ' + str(file_and_hash[word]) + '\nCalculated hash: ' + str(dowloaded_file_hash[word]))
         if file_and_hash[word] == dowloaded_file_hash[word]:
-            print('[+]Hash matched succesfully.')
+            print('[+] Hash matched succesfully.')
+            no_of_verified_files += 1
         else:
-            print('[-]Hashes do not match. The file was not received properly.')
+            print('[-] Hashes do not match. The file was not received properly.')
+    
+    faulty_files = total_no_files - no_of_verified_files
+    print('\n[*] ' + str(total_no_files) + ' files received.')
+    print('[*] No of verified files: ' + str(no_of_verified_files))
+    print('[*] No of fautly files: ' + str(faulty_files))
+
 
     print()    
-    print('[+]Exiting...')
+    print('[+] Exiting...')
 
 
 
 # Start the server
-def start_server_instance(port, directory_content, no_client, dir_list):
+def start_server_instance(port, directory_content, no_client, dir_list, directory_delimiter):
     target = '0.0.0.0'
     main_content = ''
     sending_complete = '$$sending_complete'
@@ -164,7 +177,10 @@ def start_server_instance(port, directory_content, no_client, dir_list):
             main_file = open(fille, 'rb')
             main_content = main_file.read()
             main_file.close()
-            name_of_file = fille.split("\\")[-1]
+            if directory_delimiter == "\\":
+                name_of_file = fille.split("\\")[-1]
+            else:
+                name_of_file = fille.split('/')[-1]
             filename = name_of_file + '.$$file_name'
             time.sleep(0.3)
             client_socket.send(filename.encode())
@@ -174,11 +190,11 @@ def start_server_instance(port, directory_content, no_client, dir_list):
             time.sleep(0.3)
             client_socket.send(sent_hash.encode())
             print()
-            print("[*]Sending " + fille + ' to client')
-            print("[*]File Hash: " + hash_result)
+            print("[*] Sending " + fille + ' to client')
+            print("[*] File Hash: " + hash_result)
             time.sleep(0.3)
             client_socket.send(main_content)
-            print("[+]"+fille + ' sent successfully.')
+            print("[+] "+fille + ' sent successfully.')
             time.sleep(0.3)
             client_socket.send(file_sent_complete.encode())
         time.sleep(0.3)
@@ -276,6 +292,7 @@ def main():
     client_c = False
     global directory_path
     directory_content = []
+    global path_delimiter
     speed = 1
 
     # Check if the appropriate options are used
@@ -366,7 +383,10 @@ def main():
                 directory_path_c = True
                 continue
             if directory_path_c:
-                directory_path = word
+                if (word[-1] == '/') or (word[-1] == '\\'):
+                    directory_path = word[:-1]
+                else:
+                    directory_path = word
                 break 
         for word in argumentlist:
             if '-s' in word:
@@ -393,17 +413,18 @@ def main():
         
         # Check if computer is windows or linux
         try:
+            # if windows do nothing
             output = subprocess.check_output('ver', stderr=subprocess.STDOUT, shell=True)
-            directory_delimiter = '\\'
         except:
-            directory_delimiter = '/'
+            # if linux change path delimiter
+            path_delimiter = '/'
         
         # Collect all file names in the folder, including those in subfolders and store them in a list
         dir_list = []
         if os.path.isdir(directory_path):
             test_for_dir = []
             for dir_file in os.listdir(directory_path):
-                file_path = directory_path + directory_delimiter + dir_file
+                file_path = directory_path + path_delimiter + dir_file
                 test_for_dir.append(file_path)
             
             test_if_done = False
@@ -416,7 +437,7 @@ def main():
                     if os.path.isdir(fille):
                         dir_list.append(fille)
                         for file_ in os.listdir(fille):
-                            file_path = fille + directory_delimiter + file_
+                            file_path = fille + path_delimiter + file_
                             test_for_dir.append(file_path)                    
                         test_for_dir.remove(fille)
                         counter += 1
@@ -438,8 +459,10 @@ def main():
 
     # Start the server
     if server_boolean:
-        print(directory_content)
-        start_server_instance(port, directory_content, no_client, dir_list)
+        print('[*] Files to be sent:')
+        for each_file in directory_content:
+            print(each_file)
+        start_server_instance(port, directory_content, no_client, dir_list, path_delimiter)
 
         # threadspeed = threadzz.ThreadPoolExecutor(speed)
         # threadspeed.submit(start_server_instance, port, directory_content)
