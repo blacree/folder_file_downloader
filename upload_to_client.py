@@ -133,7 +133,7 @@ def start_client_instance(target, port):
     
     faulty_files = total_no_files - no_of_verified_files
     print('\n[*] ' + str(total_no_files) + ' files received.')
-    print('[*] No of verified files: ' + str(no_of_verified_files))
+    print('[*] No of verified files: ' + str(total_no_files))
     print('[*] No of fautly files: ' + str(faulty_files))
 
 
