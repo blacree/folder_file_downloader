@@ -23,7 +23,7 @@ def usage():
     print("[+] python script.py -t [ip-address] -p [port-number]")
     print('[*] Example: python script.py -t 127.0.0.1 -p 9999')
     print("\nFor server mode run:")
-    print("[+] python script.py -l -p [port-number] -f [folder-path/file_path] -c [clients[no]]")
+    print("[+] python script.py -l -p [port-number] -f [folder_path/file_path] -c [clients[no]]")
     # print("[+] python script.py -l -p [port-number] -f [folder-path/file_path] -s [speed(no)] -c [clients[no]]")
     # print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -s [no] -c 5')
     print('[*] Example: python script.py -l -p 9999 -f C:\\Users\\user\\Documents -c 5')
@@ -82,15 +82,18 @@ def start_client_instance(target, port):
             print('[*] Creating file: ' + codecs.decode(filename, "unicode_escape"))
             print('[*] Receiving content...')
             opener = open(filename, 'wb')
+            server.send(b'$$send_next_file')
             continue
         if hash_identifier in data:
             main_hash = data.split(b'.')[0]
             print('[*] Received hash for file: ' + str(main_hash))
             file_and_hash[filename] = main_hash
+            server.send(b'$$send_next_file')
             continue
         if file_sent_complete in data:
             print('[+] '+ codecs.decode(filename, "unicode_escape") + ' received successfully.')
             opener.close()
+            server.send(b'$$send_next_file')
         try:
             opener.write(data)
         except:
@@ -172,6 +175,7 @@ def start_server_instance(port, directory_content, no_client, dir_list, director
             print()
 
         # Send each file in the list one by one. Hash of the file is also generated and sent to client.
+        # no_of_files = len(directory_content)
         for fille in directory_content:
             hashing = hashlib.md5()
             main_file = open(fille, 'rb')
@@ -182,22 +186,38 @@ def start_server_instance(port, directory_content, no_client, dir_list, director
             else:
                 name_of_file = fille.split('/')[-1]
             filename = name_of_file + '.$$file_name'
-            time.sleep(0.3)
+            time.sleep(0.1)
             client_socket.send(filename.encode())
+            while True:
+                send_next_identifier = client_socket.recv(1024)
+                if b'$$send_next_file' in send_next_identifier:
+                    break
+
             hashing.update(main_content)
             hash_result = hashing.hexdigest()
             sent_hash = hash_result + '.$$hashh'
-            time.sleep(0.3)
+            time.sleep(0.1)
             client_socket.send(sent_hash.encode())
+            while True:
+                send_next_identifier = client_socket.recv(1024)
+                if b'$$send_next_file' in send_next_identifier:
+                    break
             print()
             print("[*] Sending " + fille + ' to client')
             print("[*] File Hash: " + hash_result)
-            time.sleep(0.3)
+            time.sleep(0.1)
+
             client_socket.send(main_content)
             print("[+] "+fille + ' sent successfully.')
-            time.sleep(0.3)
+            time.sleep(0.1)
+
             client_socket.send(file_sent_complete.encode())
-        time.sleep(0.3)
+            while True:
+                send_next_identifier = client_socket.recv(1024)
+                if b'$$send_next_file' in send_next_identifier:
+                    break
+
+        # time.sleep(1)
         client_socket.send(sending_complete.encode())
         print()
         print("File transfer complete for client: " + str(addr))
@@ -240,23 +260,42 @@ def start_server_instance(port, directory_content, no_client, dir_list, director
                 main_file = open(fille, 'rb')
                 main_content = main_file.read()
                 main_file.close()
-                name_of_file = fille.split("\\")[-1]
+                if directory_delimiter == "\\":
+                    name_of_file = fille.split("\\")[-1]
+                else:
+                    name_of_file = fille.split('/')[-1]
                 filename = name_of_file + '.$$file_name'
-                time.sleep(0.3)
+                time.sleep(0.1)
                 client_socket.send(filename.encode())
+                while True:
+                    send_next_identifier = client_socket.recv(1024)
+                    if b'$$send_next_file' in send_next_identifier:
+                        break
+
                 hashing.update(main_content)
                 hash_result = hashing.hexdigest()
                 sent_hash = hash_result + '.$$hashh'
-                time.sleep(0.3)
+                time.sleep(0.1)
                 client_socket.send(sent_hash.encode())
+                while True:
+                    send_next_identifier = client_socket.recv(1024)
+                    if b'$$send_next_file' in send_next_identifier:
+                        break
+
                 print()
                 print("[*]Sending " + fille + ' to client ' + str(addresses_connected_devices[address_counter]))
                 print("[*]File Hash: " + hash_result)
-                time.sleep(0.3)
+                time.sleep(0.1)
+                
                 client_socket.send(main_content)
                 print("[+]"+fille + ' sent successfully.')
-                time.sleep(0.3)
+                time.sleep(0.1)
+                
                 client_socket.send(file_sent_complete.encode())
+                while True:
+                    send_next_identifier = client_socket.recv(1024)
+                    if b'$$send_next_file' in send_next_identifier:
+                        break
                 address_counter += 1
         address_counter = 0
 
