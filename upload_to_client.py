@@ -387,7 +387,7 @@ def main():
     
     if target_boolean:
         for word in argumentlist:
-            if 't' in word:
+            if '-t' in word:
                 target_c = True
                 continue
             if target_c:
