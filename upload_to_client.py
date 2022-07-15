@@ -370,6 +370,7 @@ def main():
         if len(sys.argv[1:]) < 4:
             print('[-] Incomplete arguments provided for client instance\n')
             usage()
+            exit()
         if len(sys.argv[1:]) > 4:
             print('[-] Too  arguments provided for client instance\n')
             usage()
@@ -379,6 +380,7 @@ def main():
         if len(sys.argv[1:]) < 3:
             print('[-] Incomplete arguments provided for server instance.\n')
             usage()
+            exit()
         if len(sys.argv[1:]) > 9:
             print('[-] Too many arguments provided for server instance\n')
             usage()
